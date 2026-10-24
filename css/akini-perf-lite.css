@@ -1,0 +1,45 @@
+/* v1232 渲染层（只做一件事：关掉"消息气泡"这一种重复几十层的毛玻璃）
+ *
+ * 上一版的问题：用通用选择器把全站 backdrop-filter 全部置零，
+ * 结果返回键/加号键/通话键/发送键/昵称条/输入栏/系统消息/顶部渐变全部变透明。
+ *
+ * 本版只针对聊天消息气泡（滚动列表里会重复几十个，iOS 每个都要单独分配 GPU 纹理，
+ * 滚动时每帧重新采样 → 卡顿 + Jetsam 强杀），其余位置保持主样式表原样：
+ *   返回键 #chatBackBtn、加号键 #plusMenuBtn、通话键 #chatCallBtn、发送键 #sendBtn、
+ *   昵称条 .ta-name-pill、输入栏 .input-wrap、顶部 .chat-top-bar-blur 的分层模糊
+ * 全部恢复为原来的毛玻璃。系统消息气泡 .msg-row.system 也保留模糊。
+ */
+
+/* 1) 只关消息气泡的毛玻璃（系统消息除外） */
+html.ios-lite body #chatBody#chatBody .msg-row:not(.system) .bubble,
+html.ios-lite body #chatBody#chatBody .msg-row:not(.system) .bubble::before,
+html.ios-lite body #chatBody#chatBody .msg-row:not(.system) .bubble::after,
+html.ios-lite body #companionMsgs#companionMsgs .msg-row:not(.system) .bubble,
+html.ios-lite body #watchChatBody#watchChatBody .msg-row:not(.system) .bubble,
+html.low-mem body #chatBody#chatBody .msg-row:not(.system) .bubble,
+html.low-mem body #chatBody#chatBody .msg-row:not(.system) .bubble::before,
+html.low-mem body #chatBody#chatBody .msg-row:not(.system) .bubble::after,
+html.low-mem body #companionMsgs#companionMsgs .msg-row:not(.system) .bubble,
+html.low-mem body #watchChatBody#watchChatBody .msg-row:not(.system) .bubble,
+html.akini-low-mem body #chatBody#chatBody .msg-row:not(.system) .bubble,
+html.akini-low-mem body #chatBody#chatBody .msg-row:not(.system) .bubble::before,
+html.akini-low-mem body #chatBody#chatBody .msg-row:not(.system) .bubble::after,
+html.akini-low-mem body #companionMsgs#companionMsgs .msg-row:not(.system) .bubble,
+html.akini-low-mem body #watchChatBody#watchChatBody .msg-row:not(.system) .bubble {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* 2) 无限循环的装饰动画在低内存设备上只保留首帧，避免持续占用 GPU/主线程 */
+html.low-mem .bg-wave,
+html.low-mem [class*="cloud"],
+html.low-mem [class*="float"],
+html.low-mem [class*="shine"],
+html.low-mem [class*="sparkle"],
+html.ios-lite .bg-wave,
+html.ios-lite [class*="cloud"],
+html.ios-lite [class*="float"],
+html.ios-lite [class*="shine"],
+html.ios-lite [class*="sparkle"] {
+  animation: none !important;
+}
